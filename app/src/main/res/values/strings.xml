@@ -10,4 +10,7 @@
   <string name="input_hint">FB</string>
   <string name="input_prefill"></string>
   <string name="network_toast">Uh-oh! This app requires an internet connection</string>
+
+  <!-- Content Descriptions -->
+  <string name="content_description_add_a_new_stock_fab">Add a new stock</string>
 </resources>
