@@ -6,6 +6,7 @@ import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
@@ -38,14 +39,11 @@ public class StockTaskService extends GcmTaskService {
     private StringBuilder mStoredSymbols = new StringBuilder();
     private boolean isUpdate;
 
-    private Handler mHandler;
-
     public StockTaskService() {
     }
 
     public StockTaskService(Context context) {
         mContext = context;
-        mHandler = new Handler();
     }
 
     String fetchData(String url) throws IOException {
@@ -57,12 +55,6 @@ public class StockTaskService extends GcmTaskService {
         return response.body().string();
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        mHandler = new Handler();
-
-    }
 
     @Override
     public int onRunTask(TaskParams params) {
@@ -147,7 +139,9 @@ public class StockTaskService extends GcmTaskService {
                 } catch (final StockNotFoundException e) {
                     result = GcmNetworkManager.RESULT_FAILURE;
                     Log.e("THIS HAPPENED", "YES IT DID");
-                    mHandler.post(new Runnable() {
+                    Handler errorHandler = new Handler(Looper.getMainLooper()); //Some reason this looper thing helped
+
+                    errorHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             Toast.makeText(mContext, e.getMessage(), Toast.LENGTH_LONG).show();
