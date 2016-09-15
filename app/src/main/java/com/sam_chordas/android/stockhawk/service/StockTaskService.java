@@ -3,11 +3,13 @@ package com.sam_chordas.android.stockhawk.service;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.RemoteException;
+import android.support.annotation.IntDef;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -24,6 +26,8 @@ import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.net.URLEncoder;
 
 /**
@@ -39,12 +43,33 @@ public class StockTaskService extends GcmTaskService {
     private StringBuilder mStoredSymbols = new StringBuilder();
     private boolean isUpdate;
 
+
+    //Creating fake enums using the support annotations intdef
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({STATUS_LOADING, STATUS_OK, STATUS_UNSUPPORTED_ENCODING_ERROR, STATUS_SERVER_ERROR, STATUS_CANNOT_CONNECT})
+    public @interface StockLoadingStatus {}
+
+    public static final int STATUS_LOADING = 0;
+    public static final int STATUS_OK = 1;
+    public static final int
+            STATUS_UNSUPPORTED_ENCODING_ERROR = 2;
+    public static final int STATUS_SERVER_ERROR = 3;
+    public static final int
+            STATUS_CANNOT_CONNECT = 4;
+
+    public static final String STATUS_PREFERENCE_FILE = "connectionStatus";
+    public static final String STATUS_KEY = "status";
+    private SharedPreferences mConnectionStatus;
+
+
+
     public StockTaskService() {
     }
 
-    public StockTaskService(Context context) {
-        mContext = context;
+    public StockTaskService(Context c) {
+        mContext = c;
     }
+
 
     String fetchData(String url) throws IOException {
         Request request = new Request.Builder()
@@ -58,10 +83,14 @@ public class StockTaskService extends GcmTaskService {
 
     @Override
     public int onRunTask(TaskParams params) {
+        //update status
+
         Cursor initQueryCursor;
-        if (mContext == null) {
-            mContext = this;
-        }
+        if (mContext == null) mContext = getApplicationContext();
+        if (mConnectionStatus == null) mConnectionStatus = mContext.getSharedPreferences(STATUS_PREFERENCE_FILE, 0);
+
+        changeStatus(STATUS_LOADING);
+
         StringBuilder urlStringBuilder = new StringBuilder();
         try {
             // Base URL for the Yahoo query
@@ -69,6 +98,7 @@ public class StockTaskService extends GcmTaskService {
             urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.quotes where symbol "
                     + "in (", "UTF-8"));
         } catch (UnsupportedEncodingException e) {
+            changeStatus(STATUS_UNSUPPORTED_ENCODING_ERROR);
             e.printStackTrace();
         }
         if (params.getTag().equals("init") || params.getTag().equals("periodic")) {
@@ -82,6 +112,7 @@ public class StockTaskService extends GcmTaskService {
                     urlStringBuilder.append(
                             URLEncoder.encode("\"YHOO\",\"AAPL\",\"GOOG\",\"MSFT\")", "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
+                    changeStatus(STATUS_UNSUPPORTED_ENCODING_ERROR);
                     e.printStackTrace();
                 }
             } else if (initQueryCursor != null) {
@@ -96,6 +127,7 @@ public class StockTaskService extends GcmTaskService {
                 try {
                     urlStringBuilder.append(URLEncoder.encode(mStoredSymbols.toString(), "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
+                    changeStatus(STATUS_UNSUPPORTED_ENCODING_ERROR);
                     e.printStackTrace();
                 }
             }
@@ -106,6 +138,7 @@ public class StockTaskService extends GcmTaskService {
             try {
                 urlStringBuilder.append(URLEncoder.encode("\"" + stockInput + "\")", "UTF-8"));
             } catch (UnsupportedEncodingException e) {
+                changeStatus(STATUS_UNSUPPORTED_ENCODING_ERROR);
                 e.printStackTrace();
             }
         }
@@ -136,9 +169,9 @@ public class StockTaskService extends GcmTaskService {
                 } catch (RemoteException | OperationApplicationException e) {
                     Log.e(LOG_TAG, "Error applying batch insert", e);
                     result = GcmNetworkManager.RESULT_FAILURE;
+                    changeStatus(STATUS_SERVER_ERROR);
                 } catch (final StockNotFoundException e) {
                     result = GcmNetworkManager.RESULT_FAILURE;
-                    Log.e("THIS HAPPENED", "YES IT DID");
                     Handler errorHandler = new Handler(Looper.getMainLooper()); //Some reason this looper thing helped
 
                     errorHandler.post(new Runnable() {
@@ -150,9 +183,23 @@ public class StockTaskService extends GcmTaskService {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                changeStatus(STATUS_CANNOT_CONNECT);
             }
         }
+
+        if (result == GcmNetworkManager.RESULT_SUCCESS) {
+            SharedPreferences.Editor editor = mConnectionStatus.edit();
+            editor.putInt(STATUS_KEY, STATUS_OK);
+            editor.apply();
+        }
         return result;
+    }
+
+    private void changeStatus(@StockLoadingStatus int status) {
+        SharedPreferences.Editor editor = mConnectionStatus.edit();
+        editor.putInt(STATUS_KEY, status);
+        editor.commit();
+        Log.e("COMMITTED", "with status " + status);
     }
 
 }

@@ -10,4 +10,5 @@
 
   <!-- Content Descriptions -->
   <string name="content_description_add_a_new_stock_fab" translatable="true">Add a new stock</string>
+  <string name="google_app_id">what is this ID</string>
 </resources>
