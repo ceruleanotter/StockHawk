@@ -49,7 +49,7 @@ public class QuoteProvider {
   }
 
   @TableEndpoint(table = QuoteDatabase.HISTORICAL_DATA)
-  public static class HISTORICAL_DATA{
+  public static class Historical_Data{
 
     @InexactContentUri(
             name = "HISTORICAL_DATA_SYMBOL",

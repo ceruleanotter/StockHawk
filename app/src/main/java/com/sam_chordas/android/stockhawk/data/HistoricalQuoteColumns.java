@@ -20,6 +20,6 @@ public class HistoricalQuoteColumns {
     @DataType(DataType.Type.INTEGER) @NotNull
     public static final String COLUMN_DATE = "date";
 
-    @DataType(DataType.Type.TEXT) @NotNull
+    @DataType(DataType.Type.REAL) @NotNull
     public static final String COLUMN_CLOSE_PRICE = "close_price";
 }

@@ -184,7 +184,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
         mTitle = getTitle();
         //if (isConnected) {
-            long period = 10L;
+            long period = 3600L;
             long flex = 10L;
 
 
