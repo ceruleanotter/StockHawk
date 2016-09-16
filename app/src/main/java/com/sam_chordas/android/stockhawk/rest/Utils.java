@@ -138,6 +138,7 @@ public class Utils {
         JSONArray jsonHistoricalData = null;
         try {
             jsonObject = new JSONObject(JSON);
+
             if (jsonObject != null && jsonObject.length() != 0) {
                 jsonHistoricalData = jsonObject.getJSONObject("query").getJSONObject("results").
                         getJSONArray("quote");
@@ -145,7 +146,7 @@ public class Utils {
                 if (jsonHistoricalData != null && jsonHistoricalData.length() != 0) {
                     for (int i = 0; i < jsonHistoricalData.length(); i++) {
                         JSONObject currentHistoricalData = jsonHistoricalData.getJSONObject(i);
-                        batchOperations.add(buildBatchOperationForQuote(currentHistoricalData));
+                        batchOperations.add(buildBatchOperationForHistoricalData(currentHistoricalData));
                     }
                 }
             }

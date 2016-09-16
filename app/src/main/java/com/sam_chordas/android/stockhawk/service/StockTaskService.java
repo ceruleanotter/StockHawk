@@ -226,8 +226,8 @@ public class StockTaskService extends GcmTaskService {
         //TODO Check the quote column for the last update day and pick the farthest in the past
 
 
-        //If any are missing last update day download a year ago
-        cal.add(Calendar.YEAR, -1);
+        //If any are missing last update day download from 3 months ago
+        cal.add(Calendar.MONTH, -3);
         String startDate = dateFormat.format(cal.getTime());
 
         //TODO check that start date != end date
