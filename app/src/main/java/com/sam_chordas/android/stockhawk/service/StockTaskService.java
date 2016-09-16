@@ -6,6 +6,7 @@ import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.database.sqlite.SQLiteConstraintException;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.RemoteException;
@@ -135,6 +136,8 @@ public class StockTaskService extends GcmTaskService {
                     e.printStackTrace();
                 }
             }
+            //Download historical data
+            downloadHistoricalForAllStocks();
         } else if (params.getTag().equals("add")) {
             isUpdate = false;
             // get symbol from params.getExtra and build query
@@ -145,6 +148,8 @@ public class StockTaskService extends GcmTaskService {
                 changeStatus(STATUS_UNSUPPORTED_ENCODING_ERROR);
                 e.printStackTrace();
             }
+            //Download historical data but just for the new stock
+            downloadHistoricalForStocks(stockInput);
         }
         // finalize the URL for the API query.
         urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
@@ -198,9 +203,6 @@ public class StockTaskService extends GcmTaskService {
         }
 
 
-        downloadHistoricalDataAllStocks();
-
-
         return result;
     }
 
@@ -211,8 +213,11 @@ public class StockTaskService extends GcmTaskService {
         Log.e("COMMITTED", "with status " + status);
     }
 
+    private void downloadHistoricalForAllStocks() {
+        downloadHistoricalForStocks(null);
+    }
 
-    private void downloadHistoricalDataAllStocks() {
+    private void downloadHistoricalForStocks(String symbol) {
         Log.e(LOG_TAG, "Historical Data is being downloaded");
         //Get the stock symbols with dates
         Cursor stockSymbols = getInitialStockSymbolAndDates();
@@ -224,6 +229,7 @@ public class StockTaskService extends GcmTaskService {
         String today = dateFormat.format(cal.getTime());
 
         //TODO Check the quote column for the last update day and pick the farthest in the past
+
 
 
         //If any are missing last update day download from 3 months ago
@@ -239,10 +245,15 @@ public class StockTaskService extends GcmTaskService {
             urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
             urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.historicaldata where symbol "
                     + "in (", "UTF-8"));
-            if (mStoredSymbols.length() > 0) {
+            if (symbol != null) {
+                //In this case we are downloading a single stock
+                urlStringBuilder.append(URLEncoder.encode("\"" + symbol + "\")", "UTF-8"));
+            } else if (mStoredSymbols.length() > 0) {
+                // In this case we're downloading whatever has been stored in the symbols
                 Log.e(LOG_TAG, "the lengths of stored symbols is greater than 0");
                 urlStringBuilder.append(URLEncoder.encode(mStoredSymbols.toString(), "UTF-8"));
             } else {
+                // in this case we're downloading the default stock data
                 Log.e(LOG_TAG, "the length of store symbols is zero?");
                 urlStringBuilder.append(URLEncoder.encode("\"YHOO\",\"AAPL\",\"GOOG\",\"MSFT\")", "UTF-8"));
             }
@@ -274,12 +285,13 @@ public class StockTaskService extends GcmTaskService {
                     ContentValues contentValues = new ContentValues();
                     // update ISCURRENT to 0 (false) so new data is current
                     mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
-                            Utils.historicalJsonToContentVals(getResponse));
-
+                            Utils.historicalJsonToContentVals(getResponse, today));
                 } catch (RemoteException | OperationApplicationException e) {
                     Log.e(LOG_TAG, "Error applying batch insert", e);
                     result = GcmNetworkManager.RESULT_FAILURE;
                     changeStatus(STATUS_SERVER_ERROR);
+                } catch (SQLiteConstraintException e) {
+                    Log.e(LOG_TAG, "the constraint was failed, but it's OK", e);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -295,11 +307,6 @@ public class StockTaskService extends GcmTaskService {
         Log.e(LOG_TAG, "Done downloading historical data, the result is " + result);
     }
 
-    private void downloadHistoricalDataOneStock(String symbol) {
-
-    }
-
-
     private Cursor getInitialStockSymbols() {
         return mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
                 new String[]{"Distinct " + QuoteColumns.SYMBOL}, null,
@@ -311,5 +318,4 @@ public class StockTaskService extends GcmTaskService {
                 new String[]{"Distinct " + QuoteColumns.SYMBOL, QuoteColumns.LAST_UPDATED},
                 null, null, null);
     }
-
 }
