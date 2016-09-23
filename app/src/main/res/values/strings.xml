@@ -1,14 +1,17 @@
 <resources>
-  <string name="app_name" translatable="true">Stock Hawk</string>
-  <string name="action_settings" translatable="true">Settings</string>
-  <string name="action_change_units" translatable="true">Change Units</string>
-  <string name="symbol_search" translatable="true">Symbol Search</string>
-  <string name="content_test" translatable="true">Search for a Stock Symbol</string>
-  <string name="input_hint" translatable="false">FB</string>
-  <string name="input_prefill" translatable="false"></string>
-  <string name="network_toast" translatable="true">Uh-oh! This app requires an internet connection</string>
+    <string name="app_name" translatable="true">Stock Hawk</string>
+    <string name="action_settings" translatable="true">Settings</string>
+    <string name="action_change_units" translatable="true">Change Units</string>
+    <string name="symbol_search" translatable="true">Symbol Search</string>
+    <string name="content_test" translatable="true">Search for a Stock Symbol</string>
+    <string name="input_hint" translatable="false">FB</string>
+    <string name="input_prefill" translatable="false"></string>
+    <string name="network_toast" translatable="true">Uh-oh! This app requires an internet connection</string>
 
-  <!-- Content Descriptions -->
-  <string name="content_description_add_a_new_stock_fab" translatable="true">Add a new stock</string>
-  <string name="google_app_id">what is this ID</string>
+    <!-- Content Descriptions -->
+    <string name="content_description_add_a_new_stock_fab" translatable="true">Add a new stock</string>
+    <string name="google_app_id">what is this ID</string>
+
+    <!-- Title Test -->
+    <string name="historical_chart_title">Historical Data: %1$s</string>
 </resources>

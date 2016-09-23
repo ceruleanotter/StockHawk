@@ -133,6 +133,13 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                     public void onItemClick(View v, int position) {
                         //TODO:
                         // do something on item click
+                        Cursor c = mCursorAdapter.getCursor();
+                        c.moveToPosition(position);
+                        String symbol = c.getString(c.getColumnIndex("symbol"));
+                        Intent detailActivityIntent = new Intent(
+                                mContext, StockHistoryChartActivity.class);
+                        detailActivityIntent.putExtra(StockHistoryChartActivity.STOCK_SYMBOL_HISTORY_EXTRA, symbol);
+                        startActivity(detailActivityIntent);
                     }
                 }));
         mRecyclerView.setAdapter(mCursorAdapter);
