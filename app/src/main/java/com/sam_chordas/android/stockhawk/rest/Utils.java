@@ -12,7 +12,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 /**
  * Created by sam_chordas on 10/8/15.
@@ -140,11 +139,10 @@ public class Utils {
 
     }
 
-    public static ArrayList<ContentProviderOperation> historicalJsonToContentVals(String JSON, String endDate) {
+    public static ArrayList<ContentProviderOperation> historicalJsonToContentVals(String JSON) {
         ArrayList<ContentProviderOperation> batchOperations = new ArrayList<>();
         JSONObject jsonObject = null;
         JSONArray jsonHistoricalData = null;
-        HashSet<String> symbolsFound = new HashSet<>();
         try {
             jsonObject = new JSONObject(JSON);
 
@@ -153,18 +151,12 @@ public class Utils {
                         getJSONArray("quote");
 
                 if (jsonHistoricalData != null && jsonHistoricalData.length() != 0) {
+                    // For each of the quotes
                     for (int i = 0; i < jsonHistoricalData.length(); i++) {
                         JSONObject currentHistoricalData = jsonHistoricalData.getJSONObject(i);
+                        //build a batch operation
                         String symbolUpdated = buildAndAddBatchOperationForHistoricalData(currentHistoricalData, batchOperations);
-                        symbolsFound.add(symbolUpdated);
                     }
-                }
-
-                for (String symbol : symbolsFound) {
-                    ContentProviderOperation.Builder updateDayForSymbol =
-                            ContentProviderOperation.newUpdate(QuoteProvider.Quotes.withSymbol(symbol));
-                    updateDayForSymbol.withValue(QuoteColumns.LAST_UPDATED, endDate);
-                    batchOperations.add(updateDayForSymbol.build());
                 }
             }
         } catch (JSONException e) {

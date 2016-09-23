@@ -62,9 +62,12 @@ public class StockTaskService extends GcmTaskService {
     public static final int
             STATUS_CANNOT_CONNECT = 4;
 
-    public static final String STATUS_PREFERENCE_FILE = "connectionStatus";
+    public static final String STATUS_PREFERENCE_FILE = "lastConnectionInfo";
     public static final String STATUS_KEY = "status";
-    private SharedPreferences mConnectionStatus;
+
+    public static final String LAST_UPDATE_DAY_KEY = "lastUpdate";
+
+    private SharedPreferences mLastConnectionInfo;
 
 
     public StockTaskService() {
@@ -91,8 +94,8 @@ public class StockTaskService extends GcmTaskService {
 
         Cursor initQueryCursor;
         if (mContext == null) mContext = getApplicationContext();
-        if (mConnectionStatus == null)
-            mConnectionStatus = mContext.getSharedPreferences(STATUS_PREFERENCE_FILE, 0);
+        if (mLastConnectionInfo == null)
+            mLastConnectionInfo = mContext.getSharedPreferences(STATUS_PREFERENCE_FILE, 0);
 
         changeStatus(STATUS_LOADING);
 
@@ -136,7 +139,7 @@ public class StockTaskService extends GcmTaskService {
                     e.printStackTrace();
                 }
             }
-            //Download historical data
+            //Download historical data fo all stocks
             downloadHistoricalForAllStocks();
         } else if (params.getTag().equals("add")) {
             isUpdate = false;
@@ -149,7 +152,7 @@ public class StockTaskService extends GcmTaskService {
                 e.printStackTrace();
             }
             //Download historical data but just for the new stock
-            downloadHistoricalForStocks(stockInput);
+            downloadHistoricalForStock(stockInput);
         }
         // finalize the URL for the API query.
         urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
@@ -197,7 +200,7 @@ public class StockTaskService extends GcmTaskService {
         }
 
         if (result == GcmNetworkManager.RESULT_SUCCESS) {
-            SharedPreferences.Editor editor = mConnectionStatus.edit();
+            SharedPreferences.Editor editor = mLastConnectionInfo.edit();
             editor.putInt(STATUS_KEY, STATUS_OK);
             editor.apply();
         }
@@ -207,36 +210,34 @@ public class StockTaskService extends GcmTaskService {
     }
 
     private void changeStatus(@StockLoadingStatus int status) {
-        SharedPreferences.Editor editor = mConnectionStatus.edit();
+        SharedPreferences.Editor editor = mLastConnectionInfo.edit();
         editor.putInt(STATUS_KEY, status);
         editor.commit();
         Log.e("COMMITTED", "with status " + status);
     }
 
     private void downloadHistoricalForAllStocks() {
-        downloadHistoricalForStocks(null);
+        downloadHistoricalForStock(null);
     }
 
-    private void downloadHistoricalForStocks(String symbol) {
+    private void downloadHistoricalForStock(String symbol) {
         Log.e(LOG_TAG, "Historical Data is being downloaded");
         //Get the stock symbols with dates
-        Cursor stockSymbols = getInitialStockSymbolAndDates();
+        Cursor stockSymbols = getInitialStockSymbols();
 
         //Set up a calendar and get today's date
         Calendar cal = new GregorianCalendar();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         dateFormat.setTimeZone(cal.getTimeZone());
         String today = dateFormat.format(cal.getTime());
-
-        //TODO Check the quote column for the last update day and pick the farthest in the past
-
-
-
-        //If any are missing last update day download from 3 months ago
+        Log.e(LOG_TAG, "Downloading data for the first time");
         cal.add(Calendar.MONTH, -3);
-        String startDate = dateFormat.format(cal.getTime());
+        String threeMonthsAgo = dateFormat.format(cal.getTime());
+        String lastUpdateDate = mLastConnectionInfo.getString(LAST_UPDATE_DAY_KEY, null);
 
-        //TODO check that start date != end date
+        String endDate = null, startDate = null;
+
+
 
         //Make the request url
         StringBuilder urlStringBuilder = new StringBuilder();
@@ -245,21 +246,43 @@ public class StockTaskService extends GcmTaskService {
             urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
             urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.historicaldata where symbol "
                     + "in (", "UTF-8"));
+
+            //Case where we're downloading for a single symbol
             if (symbol != null) {
+                //set the start dates if we're downloading one new stock
+                startDate = threeMonthsAgo;
+                endDate = lastUpdateDate; // there's a possibility this is null, not sure what to
+                // do in this case...
+
                 //In this case we are downloading a single stock
                 urlStringBuilder.append(URLEncoder.encode("\"" + symbol + "\")", "UTF-8"));
-            } else if (mStoredSymbols.length() > 0) {
-                // In this case we're downloading whatever has been stored in the symbols
-                Log.e(LOG_TAG, "the lengths of stored symbols is greater than 0");
-                urlStringBuilder.append(URLEncoder.encode(mStoredSymbols.toString(), "UTF-8"));
+
+
             } else {
-                // in this case we're downloading the default stock data
-                Log.e(LOG_TAG, "the length of store symbols is zero?");
-                urlStringBuilder.append(URLEncoder.encode("\"YHOO\",\"AAPL\",\"GOOG\",\"MSFT\")", "UTF-8"));
+                // Since it's not a single stock, start by checking whether today is a new day
+                // set the start dates if we're downloading everything
+                startDate = (lastUpdateDate == null) ? threeMonthsAgo : lastUpdateDate;
+                endDate = today;
+
+                if (startDate == endDate) {
+                    Log.e(LOG_TAG, "No new data to download");
+                    return;
+                }
+
+                // Check whether we actually have stored stock symbols
+                if (mStoredSymbols.length() > 0) {
+                    // In this case we're downloading whatever has been stored in the symbols
+                    Log.e(LOG_TAG, "the lengths of stored symbols is greater than 0");
+                    urlStringBuilder.append(URLEncoder.encode(mStoredSymbols.toString(), "UTF-8"));
+                } else {
+                    // in this case we're downloading the default stock data
+                    Log.e(LOG_TAG, "the length of store symbols is zero?");
+                    urlStringBuilder.append(URLEncoder.encode("\"YHOO\",\"AAPL\",\"GOOG\",\"MSFT\")", "UTF-8"));
+                }
             }
 
             urlStringBuilder.append(URLEncoder.encode(" and startDate = \"" + startDate +
-                    "\" and endDate = \"" + today + "\"","UTF-8"));
+                    "\" and endDate = \"" + endDate + "\"","UTF-8"));
 
             urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
                     + "org%2Falltableswithkeys&callback=");
@@ -285,7 +308,7 @@ public class StockTaskService extends GcmTaskService {
                     ContentValues contentValues = new ContentValues();
                     // update ISCURRENT to 0 (false) so new data is current
                     mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
-                            Utils.historicalJsonToContentVals(getResponse, today));
+                            Utils.historicalJsonToContentVals(getResponse));
                 } catch (RemoteException | OperationApplicationException e) {
                     Log.e(LOG_TAG, "Error applying batch insert", e);
                     result = GcmNetworkManager.RESULT_FAILURE;
@@ -300,10 +323,13 @@ public class StockTaskService extends GcmTaskService {
         }
 
         if (result == GcmNetworkManager.RESULT_SUCCESS) {
-            SharedPreferences.Editor editor = mConnectionStatus.edit();
+            SharedPreferences.Editor editor = mLastConnectionInfo.edit();
             editor.putInt(STATUS_KEY, STATUS_OK);
+            editor.putString(LAST_UPDATE_DAY_KEY, endDate);
             editor.apply();
+            Log.e(LOG_TAG, "saved the new today which is " + endDate );
         }
+
         Log.e(LOG_TAG, "Done downloading historical data, the result is " + result);
     }
 
@@ -311,11 +337,5 @@ public class StockTaskService extends GcmTaskService {
         return mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
                 new String[]{"Distinct " + QuoteColumns.SYMBOL}, null,
                 null, null);
-    }
-
-    private Cursor getInitialStockSymbolAndDates() {
-        return mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
-                new String[]{"Distinct " + QuoteColumns.SYMBOL, QuoteColumns.LAST_UPDATED},
-                null, null, null);
     }
 }
