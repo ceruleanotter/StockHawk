@@ -93,6 +93,7 @@ public class StockHistoryChartActivity  extends AppCompatActivity implements Loa
         final String dates[] = new String[data.getCount()];
 
         int time = 0;
+        data.moveToPosition(-1);
         while (data.moveToNext()) {
             entries.add(new Entry(time, data.getLong(0)));
             dates[data.getPosition()] = data.getString(1);
