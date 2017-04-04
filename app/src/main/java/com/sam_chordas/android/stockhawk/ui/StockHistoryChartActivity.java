@@ -157,7 +157,7 @@ public class StockHistoryChartActivity  extends AppCompatActivity implements Loa
 
         mHistoricalDataLineChart.setData(lineData);
         lineData.setDrawValues(false);
-        
+
         String title = String.format(getResources().getString(R.string.historical_chart_title), mSymbol);
         mHistoricalDataLineChart.setDescription(title);
 
