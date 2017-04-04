@@ -13,7 +13,9 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -22,6 +24,7 @@ import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.HistoricalQuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +39,13 @@ public class StockHistoryChartActivity  extends AppCompatActivity implements Loa
     public static final String STOCK_SYMBOL_HISTORY_EXTRA = "historical_data_symbol_extra";
     public static final int CHART_DATA_LOADER_ID = 8;
 
+    public static final String[] PROJECTION = {
+            HistoricalQuoteColumns.COLUMN_CLOSE_PRICE,
+            HistoricalQuoteColumns.COLUMN_DATE
+    };
+
+    public static final int CLOSE_PRICE_PROJECTION_INDEX = 0;
+    public static final int DATE_PROJECTION_INDEX = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,12 +64,12 @@ public class StockHistoryChartActivity  extends AppCompatActivity implements Loa
             return;
         }
 
-        Resources res = getResources();
-        String title = String.format(res.getString(R.string.historical_chart_title), mSymbol);
+
+
 
        // mTitleTextView.setText(title);
 
-        //TODO init the loader
+        // Initialize the loader
         getSupportLoaderManager().initLoader(CHART_DATA_LOADER_ID,null,this);
 
     }
@@ -67,17 +77,14 @@ public class StockHistoryChartActivity  extends AppCompatActivity implements Loa
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String[] projection = {
-                HistoricalQuoteColumns.COLUMN_CLOSE_PRICE,
-                HistoricalQuoteColumns.COLUMN_DATE
-        };
+
 
         String sortOrder = HistoricalQuoteColumns.COLUMN_DATE + " ASC";
 
         return new CursorLoader(
                 this,   // Parent activity context
                 QuoteProvider.Historical_Data.historicalDataPathWith(mSymbol),        // Table to query
-                projection,     // Projection to return
+                PROJECTION,     // Projection to return
                 null,            // No selection clause
                 null,            // No selection arguments
                 sortOrder             // Sort by date from past to present
@@ -87,7 +94,6 @@ public class StockHistoryChartActivity  extends AppCompatActivity implements Loa
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-
         List<Entry> entries = new ArrayList<Entry>();
 
         final String dates[] = new String[data.getCount()];
@@ -95,8 +101,8 @@ public class StockHistoryChartActivity  extends AppCompatActivity implements Loa
         int time = 0;
         data.moveToPosition(-1);
         while (data.moveToNext()) {
-            entries.add(new Entry(time, data.getLong(0)));
-            dates[data.getPosition()] = data.getString(1);
+            entries.add(new Entry(time, data.getLong(CLOSE_PRICE_PROJECTION_INDEX)));
+            dates[data.getPosition()] = data.getString(DATE_PROJECTION_INDEX).substring(5);
             time++;
         }
         LineDataSet dataSet = new LineDataSet(entries, "Stock Price");
@@ -107,7 +113,7 @@ public class StockHistoryChartActivity  extends AppCompatActivity implements Loa
 //        // the labels that should be drawn on the XAxis
 //        final String[] quarters = new String[] { "Q1", "Q2", "Q3", "Q4" };
 
-        AxisValueFormatter formatter = new AxisValueFormatter() {
+        AxisValueFormatter formatterXAxis = new AxisValueFormatter() {
 
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
@@ -119,12 +125,43 @@ public class StockHistoryChartActivity  extends AppCompatActivity implements Loa
             public int getDecimalDigits() {  return 0; }
         };
 
+        AxisValueFormatter formatterYAxis = new AxisValueFormatter() {
+
+            @Override
+            public String getFormattedValue(float money, AxisBase axis) {
+
+
+                NumberFormat formatter = NumberFormat.getCurrencyInstance();
+                String moneyString = formatter.format(money);
+
+                return  moneyString ;
+            }
+
+            // we don't draw numbers, so no decimal digits needed
+            @Override
+            public int getDecimalDigits() {  return 0; }
+        };
+
+
         XAxis xAxis = mHistoricalDataLineChart.getXAxis();
         xAxis.setGranularity(1f); // minimum axis-step (interval) is 1
-        xAxis.setValueFormatter(formatter);
+        xAxis.setValueFormatter(formatterXAxis);
 
+        YAxis yAxisLeft = mHistoricalDataLineChart.getAxisLeft();
+        yAxisLeft.setValueFormatter(formatterYAxis);
+
+        mHistoricalDataLineChart.getAxisRight().setEnabled(false);
+
+        Legend legend = mHistoricalDataLineChart.getLegend();
+        legend.setEnabled(false);
 
         mHistoricalDataLineChart.setData(lineData);
+        lineData.setDrawValues(false);
+        
+        String title = String.format(getResources().getString(R.string.historical_chart_title), mSymbol);
+        mHistoricalDataLineChart.setDescription(title);
+
+
         mHistoricalDataLineChart.invalidate(); // refresh
     }
 

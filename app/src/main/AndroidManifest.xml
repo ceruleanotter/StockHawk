@@ -3,8 +3,9 @@
     package="com.sam_chordas.android.stockhawk">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 
     <permission
         android:name="com.google.android.gcm.demo.permission.C2D_MESSAGE"
@@ -43,7 +44,9 @@
             android:authorities="com.sam_chordas.android.stockhawk.data.QuoteProvider"
             android:exported="false" />
 
-        <activity android:name=".ui.StockHistoryChartActivity"></activity>
+        <activity android:name=".ui.StockHistoryChartActivity"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|keyboardHidden"/>
     </application>
 
 </manifest>

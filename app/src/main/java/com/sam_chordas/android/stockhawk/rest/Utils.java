@@ -139,7 +139,7 @@ public class Utils {
 
     }
 
-    public static ArrayList<ContentProviderOperation> historicalJsonToContentVals(String JSON) {
+        public static ArrayList<ContentProviderOperation> historicalJsonToContentVals(String JSON) {
         ArrayList<ContentProviderOperation> batchOperations = new ArrayList<>();
         JSONObject jsonObject = null;
         JSONArray jsonHistoricalData = null;
