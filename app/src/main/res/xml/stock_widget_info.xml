@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:initialKeyguardLayout="@layout/stock_widget"
-    android:initialLayout="@layout/stock_widget"
+    android:initialKeyguardLayout="@layout/widget_stock_list"
+    android:initialLayout="@layout/widget_stock_list"
     android:minHeight="40dp"
     android:minWidth="110dp"
     android:previewImage="@drawable/example_appwidget_preview"

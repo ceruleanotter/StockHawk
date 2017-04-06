@@ -76,8 +76,6 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         // react appropriately, if there is nothing in the db, but something should be in the db
 
 
-
-
         SharedPreferences prefs = getSharedPreferences(StockTaskService.STATUS_PREFERENCE_FILE, 0);
         SharedPreferences.Editor editor = prefs.edit();
 
