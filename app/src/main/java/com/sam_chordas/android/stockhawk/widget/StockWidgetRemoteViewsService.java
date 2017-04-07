@@ -59,7 +59,7 @@ public class StockWidgetRemoteViewsService extends RemoteViewsService {
 
             @Override
             public void onDataSetChanged() {
-                Log.e(LOG_TAG, "On dataset changed called";
+                Log.e(LOG_TAG, "On dataset changed called");
                 //TODO this is probably bad
                 if (mData != null) {
                     mData.close();
@@ -105,7 +105,7 @@ public class StockWidgetRemoteViewsService extends RemoteViewsService {
                     return null;
                 }
                 RemoteViews views = new RemoteViews(getPackageName(),
-                        R.layout.list_item_quote);
+                        R.layout.widget_list_item_quote);
 
                 // TODO adapter stuff
 
@@ -162,7 +162,7 @@ public class StockWidgetRemoteViewsService extends RemoteViewsService {
 
             @Override
             public RemoteViews getLoadingView() {
-                return new RemoteViews(getPackageName(), R.layout.list_item_quote);
+                return new RemoteViews(getPackageName(), R.layout.widget_list_item_quote);
             }
 
             @Override
