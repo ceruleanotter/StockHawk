@@ -1,7 +1,6 @@
 package com.sam_chordas.android.stockhawk.widget;
 
 import android.annotation.TargetApi;
-import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
@@ -9,13 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.sam_chordas.android.stockhawk.R;
-import com.sam_chordas.android.stockhawk.ui.MyStocksActivity;
-import com.sam_chordas.android.stockhawk.ui.StockHistoryChartActivity;
 
 /**
  * Implementation of App Widget functionality.
