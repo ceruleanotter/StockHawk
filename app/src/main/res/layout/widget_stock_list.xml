@@ -10,27 +10,47 @@
      limitations under the License.
 -->
 
-
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/material_dark_grey_background">
+    android:orientation="vertical"
+    android:padding="@dimen/widget_margin">
 
-    <ListView
-        android:id="@+id/widget_list"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:divider="@null"
-        android:dividerHeight="0dp"
-        tools:listitem="@layout/list_item_quote" />
+        android:layout_height="@dimen/abc_action_bar_default_height_material"
+        android:background="@color/material_blue_500">
 
-    <TextView
-        android:id="@+id/widget_empty"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/app_name"
+            android:text="Today's Stocks"
+            style="@style/HeaderStyleWidget" />
+    </FrameLayout>
+
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fontFamily="sans-serif-condensed"
-        android:gravity="center"
-        android:text="@string/empty_forecast_list"
-        android:textAppearance="?android:textAppearanceLarge" />
-</FrameLayout>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/material_dark_grey_background">
+
+        <ListView
+            android:id="@+id/widget_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@null"
+            android:dividerHeight="0dp"
+            tools:listitem="@layout/list_item_quote" />
+
+        <TextView
+            android:id="@+id/widget_empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fontFamily="sans-serif-condensed"
+            android:gravity="center"
+            android:text="@string/empty_forecast_list"
+            android:textAppearance="?android:textAppearanceLarge" />
+    </FrameLayout>
+</LinearLayout>
