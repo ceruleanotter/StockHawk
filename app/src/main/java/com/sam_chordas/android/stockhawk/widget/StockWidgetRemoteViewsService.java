@@ -7,7 +7,6 @@ package com.sam_chordas.android.stockhawk.widget;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.util.Log;
@@ -59,7 +58,7 @@ public class StockWidgetRemoteViewsService extends RemoteViewsService {
 
             @Override
             public void onDataSetChanged() {
-                Log.e(LOG_TAG, "On dataset changed called";
+                Log.e(LOG_TAG, "On dataset changed called");
                 //TODO this is probably bad
                 if (mData != null) {
                     mData.close();
