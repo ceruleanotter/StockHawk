@@ -48,11 +48,11 @@ public class StockWidget extends AppWidgetProvider {
             setRemoteAdapterV11(context, views);
         }
 
-        /*Intent clickIntentTemplate = new Intent(context, StockHistoryChartActivity.class);
+        Intent clickIntentTemplate = new Intent(context, StockHistoryChartActivity.class);
         PendingIntent clickPendingIntentTemplate = TaskStackBuilder.create(context)
                 .addNextIntentWithParentStack(clickIntentTemplate)
                 .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-        views.setPendingIntentTemplate(R.id.widget_list, clickPendingIntentTemplate);*/
+        views.setPendingIntentTemplate(R.id.widget_list, clickPendingIntentTemplate);
         views.setEmptyView(R.id.widget_list, R.id.widget_empty);
 
         // Tell the AppWidgetManager to perform an update on the current app widget

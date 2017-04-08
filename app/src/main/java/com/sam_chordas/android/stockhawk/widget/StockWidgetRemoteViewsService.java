@@ -20,6 +20,7 @@ import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteDatabase;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
 import com.sam_chordas.android.stockhawk.rest.Utils;
+import com.sam_chordas.android.stockhawk.ui.StockHistoryChartActivity;
 
 /**
  * RemoteViewsService controlling the mData being shown in the scrollable weather detail widget
@@ -141,16 +142,12 @@ public class StockWidgetRemoteViewsService extends RemoteViewsService {
 
 
                 // TODO click stuff
-                /*final Intent fillInIntent = new Intent();
-                String locationSetting =
-                        Utility.getPreferredLocation(DetailWidgetRemoteViewsService.this);
-                Uri weatherUri = WeatherContract.WeatherEntry.buildWeatherLocationWithDate(
-                        locationSetting,
-                        dateInMillis);
-                fillInIntent.setData(weatherUri);
+                final Intent fillInIntent = new Intent();
+                String symbol = mData.getString(INDEX_STOCK_SYMBOL);
+                fillInIntent.putExtra(StockHistoryChartActivity.STOCK_SYMBOL_HISTORY_EXTRA, symbol);
 
                 //TODO
-                views.setOnClickFillInIntent(R.id.widget_list_item, fillInIntent);*/
+                views.setOnClickFillInIntent(R.id.widget_list_item, fillInIntent);
                 return views;
             }
 
